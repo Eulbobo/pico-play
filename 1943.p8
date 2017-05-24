@@ -136,6 +136,8 @@ function _draw()
 	 spr(p.s,p.x,p.y,4,2)
 	 foreach(shots,update_shot)
 	 foreach(ennemies,update_ennemi)
+ else
+  print("gameover",64,64)
  end
  
 end

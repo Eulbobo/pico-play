@@ -19,11 +19,16 @@ function _init()
 	cls()
 end
 
-function moving_rabbit(r,s)
- r.x += s
- r.sp += 2
- if (r.s ~= s) then
- 	r.d = not r.d
+function moving_rabbit(r,h,v)
+ r.x += h
+ r.y += v
+ if (r.x%2==0) then 
+	 r.sp += 2
+	end
+ if (h == -1) then
+ 	r.d = true
+ else
+ 	r.d = false
  end
  r.s = s
  
@@ -33,12 +38,21 @@ function moving_rabbit(r,s)
  
 end
 
+function static_rabbit(r)
+ r.sp = 0
+end
+
 function _update()
  if	btn(0) then
- 	moving_rabbit(rabbit,-1)
- end
- if	btn(1) then
- 	moving_rabbit(rabbit,1)
+ 	moving_rabbit(rabbit,-1,0)
+ elseif	btn(1) then
+ 	moving_rabbit(rabbit,1,0)
+ elseif btn(3) then
+  moving_rabbit(rabbit,0,1)
+ elseif btn(2) then
+  moving_rabbit(rabbit,0,-1)
+ else
+ 	static_rabbit(rabbit)
  end
 end
 
