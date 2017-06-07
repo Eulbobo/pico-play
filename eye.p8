@@ -4,7 +4,7 @@ __lua__
 x=64 y=64
 mx=0 my=0 mb=0
 free=false
-
+rad=20
 mmx=0 mmy=0
 function _init()
 	poke(0x5f2d, 1) -- mouse
@@ -15,6 +15,12 @@ function _update()
  my=stat(33)
  mb=stat(34)>0
  
+ --if (mb) 
+ move()
+ 
+end
+
+function move()
  -- distance avec la souris
  dx=mx-x
  dy=my-y
@@ -24,18 +30,24 @@ function _update()
  -- test libert dans le cercle
  mmx=abs(mvx-64)
  mmy=abs(mvy-64)
- free=mmx*mmx+mmy*mmy<20*20
+ free=true
+ free=mmx*mmx+mmy*mmy<rad*rad
  
  if (free and abs(dx)>1) x=mvx
- if (free and abs(dy)>2) y=mvy
+ if (free and abs(dy)>1) y=mvy
+end
 
+function draw_line()
+	line(x,y,mx,my)
 end
 
 function _draw()
 	cls()
-	circ(x,y,1,2)
+	spr(1,x-4,y-4)
+	--circ(x,y,1,2)
 	circ(mx,my,1,4)
-	circ(64,64,20,6)
+	circ(64,64,rad+3,6)
+	--if (mb) draw_line()
 end
 __gfx__
 07000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
