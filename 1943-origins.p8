@@ -1,7 +1,146 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
+p={
+ x=64,
+ y=64,
+ s=1,
+ speed=2
+}
 
+lastshot=0
+framecount=0
+shots={}
+ennemies={}
+score=0
+
+dead=false
+
+function add_ennemi()
+	speed=1
+	sprte=16
+	scr=2
+	if flr(rnd(10)) > 8 then
+	 speed=3
+  sprte=21
+  scr=10
+ end
+	
+	ennemi={
+		x=flr(rnd(125)),
+		y=-10,
+		s=sprte,
+		v=speed,
+		scr=scr
+	}
+	add(ennemies,ennemi)
+end
+
+function update_ennemi(e)
+	e.y += e.v
+	spr(e.s,e.x,e.y)
+	
+	if e.y > 128 then 
+		del(ennemies,e) 
+	end
+	
+	-- verification collision joueur
+	delt_x=abs(e.x-p.x)
+ delt_y=abs(e.y-p.y)
+ if (delt_y<8 and delt_x<8) then
+ 	dead=true
+ end 
+end
+
+function shoot(xi,yi)
+ if framecount - lastshot >= 4 
+ 	then
+  shot={
+   x=xi+9,
+   y=yi-4,
+   s=32
+  }
+  add(shots,shot)
+  lastshot = framecount
+ end
+ 
+end
+
+function update_shot(s)
+	s.y -= 3
+	spr(s.s,s.x,s.y)
+	
+	if s.y < 0 then 
+		del(shots,s) 
+	end
+
+ nbennemies = #ennemies
+	if (nbennemies) > 0 then
+	 endloop=false
+	 i = 1
+	 while not endloop do
+	 	endloop=check_ennemi(ennemies[i],s)
+	 	i+=1
+	 	if (i>nbennemies) then 
+	 	 endloop = true
+	 	end 
+	 end	
+	end
+
+end
+
+function check_ennemi(e,s)
+ delt_x=abs(e.x-s.x)
+ delt_y=abs(e.y-s.y)
+ if (delt_y<8 and delt_x<8) then
+ 	del(ennemies,e)
+ 	del(shots,s)
+ 	score+=e.scr
+ 	return true
+ end 
+ return false
+end
+
+function _update()
+ if btn(0) then
+ 	p.x -= p.speed
+ elseif btn(1) then
+  p.x += p.speed
+ end
+ 
+ if btn(2) then
+  p.y -= p.speed
+ elseif btn(3) then
+  p.y += p.speed
+ end
+ 
+ if btn(4) then
+ 	shoot(p.x,p.y)
+ end
+ 
+ p.x=max(0,min(127-(8*3),p.x))
+ p.y=max(0,min(129-(8*2),p.y))
+ framecount+=1
+ 
+ x = flr(rnd(12))
+ if x>10 then
+  add_ennemi()
+ end
+
+end
+
+function _draw()
+ cls(1)
+ print(score,10,10)
+ if not dead then 
+	 spr(p.s,p.x,p.y,4,2)
+	 foreach(shots,update_shot)
+	 foreach(ennemies,update_ennemi)
+ else
+  print("gameover",64,64)
+ end
+ 
+end
 __gfx__
 000000000000aaa59995d5aaa5999000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000000000005d5005650056500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
