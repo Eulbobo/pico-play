@@ -17,6 +17,9 @@ moles={}
 
 score=0
 score_mole=0
+cptmole=1
+
+max_speed=0.5
 
 function draw_rabbit(r)
 	spr(r.sp,r.x,r.y,2,2,r.d)
@@ -43,71 +46,95 @@ function add_mole()
  -- sur les bords exterieurs
  -- et spawn toutes 
  -- les 10 carottes
- if (score%10>#moles) then
+ if (score/10>#moles) then
   mole={
 	 	x=-10,
 	 	y=-10,
 	 	sp=48,
 	 	s=0,
 	 	dx=0,--destination
-	 	dy=0
+	 	dy=0,
+	 	spd=max_speed,
+	 	stun=0,
+	 	inertia=0,
+	 	id=cptmole
 	 }
+	 cptmole+=1
 	 add(moles,mole)
  end
 end
 
-function check_player()
-	cpt = #carrots
-	while cpt > 0 do
-		c=carrots[cpt]
-	 d2x=abs(rabbit.x+14-(c.x+8))
-	 d2y=abs(rabbit.y+14-(c.y+8))
-	 if (d2y<8 and d2x<8) then
-	 	del(carrots,c)
-	 	score+=1
-	 end 
-	 cpt-=1
-	end
+function check_grab(c)
+	d2x=abs(rabbit.x+14-(c.x+8))
+	d2y=abs(rabbit.y+14-(c.y+8))
+	if (d2y<8 and d2x<8) then
+		del(carrots,c)
+		score+=1
+	end 
 end
+
+
 
 function move_mole(m)
  -- determiner la carotte 
  -- la plus proche
- min_dist=2000
- cpt = #carrots
-	while cpt > 0 do
-		c=carrots[cpt]
+ min_dist=20000
+ 
+ if (m.inertia==0) then
+		for c in all(carrots) do
+			dx=abs(m.x-c.x)
+		 dy=abs(m.y-c.y)
+		 dist=dx*dx+dy*dy
+		 if (dist<min_dist) then
+			 m.dx=c.x
+			 m.dy=c.y
+			 min_dist=dist
+		 end
+		end
+	end
+	
+ -- se diriger la cible
+ dest_x=m.x+m.spd*sgn(m.dx-m.x)
+ dest_y=m.y+m.spd*sgn(m.dy-m.y)
+ 
+ -- verification si une taupe est deja la
+ if (m.inertia==0) then
+	 for mo in all(moles) do
+	  if (mo.id != m.id) then
+				dx=abs(dest_x-mo.x)
+			 dy=abs(dest_y-mo.y)
+			 if (dx<8 and dy<8) then
+     mo.dx=m.x+10*-1*sgn(dest_x-mo.x)
+	    mo.dy=m.y+10*-1*sgn(dest_y-mo.y)
+	    mo.inertia=10
+	    m.inertia=10
+			 end 
+		 end
+		end
+	end
+	
+	m.x=dest_x
+	m.y=dest_y
+	
+	for c in all(carrots) do
 		dx=abs(m.x-c.x)
 	 dy=abs(m.y-c.y)
-	 dist=dx*dx+dy*dy
-	 if (dist<min_dist) then
-	 	m.dx=c.x
-	 	m.dy=c.y
-	 	min_dist=dist
+	 if (dx<4 and dy<4) then
+	 	del(carrots,c)
+	 	score_mole+=1
+	 	m.inertia=10
+	 	dx=m.x+10*sgn(dest_x-c.x)
+	  dy=m.y+10*sgn(dest_y-c.y)
 	 end 
-	 cpt-=1
 	end
- -- se diriger la cible
- m.x=m.x+sgn(m.dx-m.x)
- m.y=m.y+sgn(m.dy-m.y)
+	 
+ if (m.inertia>0) then
+	 m.inertia-=1
+	end
  
 	m.sp+= 1
 	if (m.sp>50) then
 		m.sp=48
-	end
-end
-
-function check_mole(m)
- cpt = #carrots
-	while cpt > 0 do
-		c=carrots[cpt]
-		d_x=abs(m.x-c.x)
-	 d_y=abs(m.y-c.y)
-	 if (d_x<8 and d_x<8) then
-	 	del(carrots,c)
-	 	score_mole+=1
-	 end 
-	 cpt-=1
 	end
 end
 
@@ -157,8 +184,7 @@ function _update()
  add_carrot()
  add_mole()
  foreach(moles,move_mole)
- foreach(moles,check_mole)
- check_player()
+ foreach(carrots,check_grab)
 end
 
 function _init()
@@ -166,7 +192,7 @@ function _init()
 	cpt=0
 	repeat
 	 add_carrot()
-	 cpt=cpt+1
+	 cpt+=1
 	until cpt>9
 end
 
